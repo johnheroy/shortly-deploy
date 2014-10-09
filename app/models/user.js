@@ -1,3 +1,4 @@
+var bcrypt = require('bcrypt-nodejs');
 var mongoose = require('../config');
 
 var userSchema = mongoose.Schema({
@@ -5,7 +6,21 @@ var userSchema = mongoose.Schema({
   password: String
 });
 
+userSchema.pre('save', function(next){
+  var that = this;
+  bcrypt.hash(this.password, null, null, function(err, hash){
+    that.password = hash;
+    next();
+  });
+});
+
 var User = mongoose.model('User', userSchema);
+
+User.prototype.comparePassword = function(attemptedPassword, callback){
+  bcrypt.compare(attemptedPassword, this.password, function(err, isMatch){
+    callback(null, isMatch);
+  });
+}
 
 module.exports = User;
 
